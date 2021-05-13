@@ -58,8 +58,10 @@
   :syntax-table nil
   :abbrev-table nil
   (buffer-disable-undo)
-  (whitespace-mode -1)
-  (linum-mode -1)
+  (when (featurep 'whitespace)
+    (whitespace-mode -1))
+  (when (featurep 'linum)
+    (linum-mode -1))
   (when (>= emacs-major-version 26)
     (display-line-numbers-mode -1))
   (page-break-lines-mode 1)

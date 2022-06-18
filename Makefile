@@ -1,25 +1,36 @@
-export EMACS ?= emacs
-export BATCH = --batch -q -l .emacs/init.el
+EMACS ?= emacs
+EASK ?= eask
 
-ELLP := $(shell find . -regex '.*elisp-lint-[0-9]+\.[0-9]+')
-ELS = $(filter-out emacs-dashboard-autoloads.el,$(wildcard *.el))
-OBJECTS = $(ELS:.el=.elc)
-BACKUPS = $(ELS:.el=.el~)
+.PHONY: clean checkdoc lint package install compile test
 
-.PHONY: version lint clean cleanelpa
+ci: clean package install compile
 
-.elpa:
-	$(EMACS) $(BATCH)
-	touch .elpa
+package:
+	@echo "Packaging..."
+	$(EASK) package
 
-version: .elpa
-	$(EMACS) $(BATCH) --version
+install:
+	@echo "Installing..."
+	$(EASK) install
 
-lint: .elpa
-	$(EMACS) $(BATCH) -l $(ELLP)/elisp-lint.el -f elisp-lint-files-batch --no-package-lint $(ELS)
+compile:
+	@echo "Compiling..."
+	$(EASK) compile
+
+test:
+	@echo "Testing..."
+	$(EASK) test ert ./test/*.el
+
+test-activate: package install
+	$(EASK) emacs --batch -l ./test/activate.el
+
+checkdoc:
+	@echo "Run checkdoc..."
+	$(EASK) lint checkdoc
+
+lint:
+	@echo "Run package-lint..."
+	$(EASK) lint package
 
 clean:
-	rm -f $(OBJECTS) $(BACKUPS) emacs-dashboard-autoloads.el*
-
-cleanelpa: clean
-	rm -rf .emacs/elpa .emacs/quelpa .emacs/.emacs-custom.el* .elpa
+	$(EASK) clean-all
